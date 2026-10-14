@@ -4,15 +4,16 @@
 
 [Version]
 Signature   = "$WINDOWS NT$"
-Class       = System ; TODO: specify appropriate Class
-ClassGuid   = {4d36e97d-e325-11ce-bfc1-08002be10318} ; TODO: specify appropriate ClassGuid
+Class       = "ActivityMonitor"                         ; Thuộc nhóm Activity Monitor
+ClassGuid   = {b4c3db5e-7011-4456-91a7-b44cbf107201}    ; GUID chuẩn của FSFilter Activity Monitor
 Provider    = %ManufacturerName%
+DriverVer   = 
 CatalogFile = MinifilterDriver.cat
-DriverVer   = ; TODO: set DriverVer in stampinf property pages
 PnpLockdown = 1
 
 [DestinationDirs]
-DefaultDestDir = 13
+DefaultDestDir          = 12
+Minifilter.DriverFiles  = 12            ; %windir%\system32\drivers
 
 [SourceDisksNames]
 1 = %DiskName%,,,""
@@ -20,43 +21,42 @@ DefaultDestDir = 13
 [SourceDisksFiles]
 MinifilterDriver.sys = 1,,
 
-;*****************************************
-; Install Section
-;*****************************************
+[DefaultInstall.NT$ARCH$]
+OptionDesc          = %ServiceDescription%
+CopyFiles           = Minifilter.DriverFiles
 
-[Manufacturer]
-%ManufacturerName% = Standard,NT$ARCH$.10.0...16299 ; %13% support introduced in build 16299
+[DefaultInstall.NT$ARCH$.Services]
+AddService          = %ServiceName%,,Minifilter.Service
 
-[Standard.NT$ARCH$.10.0...16299]
-%MinifilterDriver.DeviceDesc% = MinifilterDriver_Device, Root\MinifilterDriver ; TODO: edit hw-id
+[Minifilter.Service]
+DisplayName      = %ServiceName%
+Description      = %ServiceDescription%
+ServiceBinary    = %12%\%DriverName%.sys        ; %windir%\system32\drivers\MinifilterDriver.sys
+Dependencies     = "FltMgr"
+ServiceType      = 2                            ; SERVICE_FILE_SYSTEM_DRIVER
+StartType        = 3                            ; SERVICE_DEMAND_START
+ErrorControl     = 1                            ; SERVICE_ERROR_NORMAL
+LoadOrderGroup   = "FSFilter Activity Monitor"
+AddReg           = Minifilter.AddRegistry
 
-[MinifilterDriver_Device.NT]
-CopyFiles = File_Copy
+[Minifilter.AddRegistry]
+HKR,,"DebugFlags",0x00010001 ,0x0
+HKR,,"SupportedFeatures",0x00010001,0x3
+HKR,"Instances","DefaultInstance",0x00000000,%DefaultInstance%
+HKR,"Instances\"%Instance1.Name%,"Altitude",0x00000000,%Instance1.Altitude%
+HKR,"Instances\"%Instance1.Name%,"Flags",0x00010001,%Instance1.Flags%
 
-[File_Copy]
-MinifilterDriver.sys
-
-;-------------- Service installation
-[MinifilterDriver_Device.NT.Services]
-AddService = MinifilterDriver,%SPSVCINST_ASSOCSERVICE%, MinifilterDriver_Service_Inst
-
-; -------------- MinifilterDriver driver install sections
-[MinifilterDriver_Service_Inst]
-DisplayName    = %MinifilterDriver.SVCDESC%
-ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
-StartType      = 3               ; SERVICE_DEMAND_START
-ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
-ServiceBinary  = %13%\MinifilterDriver.sys
-
-[MinifilterDriver_Device.NT.Wdf]
-KmdfService = MinifilterDriver, MinifilterDriver_wdfsect
-
-[MinifilterDriver_wdfsect]
-KmdfLibraryVersion = $KMDFVERSION$
+[Minifilter.DriverFiles]
+%DriverName%.sys
 
 [Strings]
-SPSVCINST_ASSOCSERVICE = 0x00000002
-ManufacturerName = "<Your manufacturer name>" ;TODO: Replace with your manufacturer name
-DiskName = "MinifilterDriver Installation Disk"
-MinifilterDriver.DeviceDesc = "MinifilterDriver Device"
-MinifilterDriver.SVCDESC = "MinifilterDriver Service"
+ManufacturerName        = "CuongDev"
+ServiceDescription     = "Minifilter File & Process Monitor Driver"
+ServiceName            = "MinifilterDriver"
+DriverName             = "MinifilterDriver"
+DiskName               = "MinifilterDriver Source Disk"
+
+DefaultInstance        = "MinifilterDriver - Top Instance"
+Instance1.Name         = "MinifilterDriver - Top Instance"
+Instance1.Altitude     = "370030"               ; Nhóm Activity Monitor (360000-389999)
+Instance1.Flags        = 0x0

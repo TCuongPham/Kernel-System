@@ -3,7 +3,7 @@
     <Platform Name="ARM64" />
     <Platform Name="x64" />
   </Configurations>
-  <Project Path="Client/Client.vcxproj">
+  <Project Path="Client/Client.vcxproj" Id="0168128d-68ea-4099-b868-eefc454dffa9">
     <Platform Project="x64" />
   </Project>
   <Project Path="LegacyDriver/LegacyDriver.vcxproj">
