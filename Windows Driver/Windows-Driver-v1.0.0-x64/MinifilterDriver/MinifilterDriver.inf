@@ -1,0 +1,70 @@
+;
+; MinifilterDriver.inf
+;
+
+[Version]
+Signature   = "$WINDOWS NT$"
+Class       = "ActivityMonitor"
+ClassGuid   = {b86dff51-a31e-4bac-b3cf-e8cfe75c9fc2}
+Provider    = %ManufacturerName%
+DriverVer = 10/15/2026,15.23.10.526
+CatalogFile = MinifilterDriver.cat
+PnpLockdown = 0
+
+[DestinationDirs]
+DefaultDestDir          = 12
+Minifilter.DriverFiles  = 12            ; %windir%\system32\drivers
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+MinifilterDriver.sys = 1,,
+
+[DefaultInstall.NTamd64]
+OptionDesc          = %ServiceDescription%
+CopyFiles           = Minifilter.DriverFiles
+
+[DefaultInstall.NTamd64.Services]
+AddService          = %ServiceName%,,Minifilter.Service
+
+[DefaultInstall.NTarm64]
+OptionDesc          = %ServiceDescription%
+CopyFiles           = Minifilter.DriverFiles
+
+[DefaultInstall.NTarm64.Services]
+AddService          = %ServiceName%,,Minifilter.Service
+
+[Minifilter.Service]
+DisplayName      = %ServiceName%
+Description      = %ServiceDescription%
+ServiceBinary    = %12%\%DriverName%.sys
+Dependencies     = "FltMgr"
+ServiceType      = 2                            ; SERVICE_FILE_SYSTEM_DRIVER
+StartType        = 3                            ; SERVICE_DEMAND_START
+ErrorControl     = 1                            ; SERVICE_ERROR_NORMAL
+LoadOrderGroup   = "FSFilter Activity Monitor"
+AddReg           = Minifilter.AddRegistry
+
+[Minifilter.AddRegistry]
+HKR,"Parameters","DebugFlags",0x00010001 ,0x0
+HKR,"Parameters","SupportedFeatures",0x00010001,0x3
+HKR,"Instances","DefaultInstance",0x00000000,%DefaultInstance%
+HKR,"Instances\"%Instance1.Name%,"Altitude",0x00000000,%Instance1.Altitude%
+HKR,"Instances\"%Instance1.Name%,"Flags",0x00010001,%Instance1.Flags%
+
+[Minifilter.DriverFiles]
+%DriverName%.sys
+
+[Strings]
+ManufacturerName        = "CuongDev"
+ServiceDescription     = "Minifilter File & Process Monitor Driver"
+ServiceName            = "MinifilterDriver"
+DriverName             = "MinifilterDriver"
+DiskName               = "MinifilterDriver Source Disk"
+
+DefaultInstance        = "MinifilterDriver - Top Instance"
+Instance1.Name         = "MinifilterDriver - Top Instance"
+Instance1.Altitude     = "370030"
+Instance1.Flags        = 0x0
+

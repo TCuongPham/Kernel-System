@@ -11,9 +11,7 @@ int main()
     // Cài đặt console hỗ trợ UTF-8
     SetConsoleOutputCP(CP_UTF8);
 
-    std::cout << "==============================================================\n";
     std::cout << "  Minifilter File & Process Activity Monitor (User Mode Client) \n";
-    std::cout << "==============================================================\n\n";
 
     std::wcout << L"[*] Dang ket noi toi communication port: " << MINIFILTER_PORT_NAME << L" ...\n";
 
@@ -31,13 +29,12 @@ int main()
         std::cerr << "[-] Khong the ket noi toi Minifilter Port. HRESULT: 0x" << std::hex << hr << std::dec << "\n";
         std::cerr << "    -> Hay chac chan MinifilterDriver da duoc load ('fltmc load MinifilterDriver').\n";
         std::cerr << "    -> Hay chay chuong trinh duoi quyen Administrator!\n\n";
-        std::cout << "Nhan Enter de thoat...";
         std::cin.get();
         return 1;
     }
 
     std::cout << "[+] Ket noi toi Minifilter Communication Port thanh cong!\n";
-    std::cout << "[*] Dang lang nghe cac su kien he thong (Nhan Ctrl + C de dung)...\n";
+    std::cout << "[*] Dang lang nghe cac su kien he thong...\n";
     std::cout << "--------------------------------------------------------------\n";
 
     MONITOR_MESSAGE msg = { 0 };

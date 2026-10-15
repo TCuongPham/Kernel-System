@@ -4,12 +4,12 @@
 
 [Version]
 Signature   = "$WINDOWS NT$"
-Class       = "ActivityMonitor"                         ; Thuộc nhóm Activity Monitor
-ClassGuid   = {b4c3db5e-7011-4456-91a7-b44cbf107201}    ; GUID chuẩn của FSFilter Activity Monitor
+Class       = "ActivityMonitor"
+ClassGuid   = {b86dff51-a31e-4bac-b3cf-e8cfe75c9fc2}
 Provider    = %ManufacturerName%
-DriverVer   = 
+DriverVer   = 10/15/2026,1.0.0.0
 CatalogFile = MinifilterDriver.cat
-PnpLockdown = 1
+PnpLockdown = 0
 
 [DestinationDirs]
 DefaultDestDir          = 12
@@ -21,17 +21,24 @@ Minifilter.DriverFiles  = 12            ; %windir%\system32\drivers
 [SourceDisksFiles]
 MinifilterDriver.sys = 1,,
 
-[DefaultInstall.NT$ARCH$]
+[DefaultInstall.NTamd64]
 OptionDesc          = %ServiceDescription%
 CopyFiles           = Minifilter.DriverFiles
 
-[DefaultInstall.NT$ARCH$.Services]
+[DefaultInstall.NTamd64.Services]
+AddService          = %ServiceName%,,Minifilter.Service
+
+[DefaultInstall.NTarm64]
+OptionDesc          = %ServiceDescription%
+CopyFiles           = Minifilter.DriverFiles
+
+[DefaultInstall.NTarm64.Services]
 AddService          = %ServiceName%,,Minifilter.Service
 
 [Minifilter.Service]
 DisplayName      = %ServiceName%
 Description      = %ServiceDescription%
-ServiceBinary    = %12%\%DriverName%.sys        ; %windir%\system32\drivers\MinifilterDriver.sys
+ServiceBinary    = %12%\%DriverName%.sys
 Dependencies     = "FltMgr"
 ServiceType      = 2                            ; SERVICE_FILE_SYSTEM_DRIVER
 StartType        = 3                            ; SERVICE_DEMAND_START
@@ -40,8 +47,8 @@ LoadOrderGroup   = "FSFilter Activity Monitor"
 AddReg           = Minifilter.AddRegistry
 
 [Minifilter.AddRegistry]
-HKR,,"DebugFlags",0x00010001 ,0x0
-HKR,,"SupportedFeatures",0x00010001,0x3
+HKR,"Parameters","DebugFlags",0x00010001 ,0x0
+HKR,"Parameters","SupportedFeatures",0x00010001,0x3
 HKR,"Instances","DefaultInstance",0x00000000,%DefaultInstance%
 HKR,"Instances\"%Instance1.Name%,"Altitude",0x00000000,%Instance1.Altitude%
 HKR,"Instances\"%Instance1.Name%,"Flags",0x00010001,%Instance1.Flags%
@@ -58,5 +65,5 @@ DiskName               = "MinifilterDriver Source Disk"
 
 DefaultInstance        = "MinifilterDriver - Top Instance"
 Instance1.Name         = "MinifilterDriver - Top Instance"
-Instance1.Altitude     = "370030"               ; Nhóm Activity Monitor (360000-389999)
+Instance1.Altitude     = "370030"
 Instance1.Flags        = 0x0

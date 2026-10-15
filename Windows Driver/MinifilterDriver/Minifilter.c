@@ -221,6 +221,18 @@ FLT_PREOP_CALLBACK_STATUS PreWriteCallback(
     return FLT_PREOP_SUCCESS_NO_CALLBACK;
 }
 
+#ifndef FileDispositionInformationEx
+#define FileDispositionInformationEx ((FILE_INFORMATION_CLASS)64)
+#endif
+
+#ifndef FILE_DISPOSITION_FLAG_DELETE
+#define FILE_DISPOSITION_FLAG_DELETE 0x00000001
+#endif
+
+typedef struct _MY_FILE_DISPOSITION_INFORMATION_EX {
+    ULONG Flags;
+} MY_FILE_DISPOSITION_INFORMATION_EX, *PMY_FILE_DISPOSITION_INFORMATION_EX;
+
 FLT_PREOP_CALLBACK_STATUS PreSetInformationCallback(
     _Inout_ PFLT_CALLBACK_DATA Data,
     _In_ PCFLT_RELATED_OBJECTS FltObjects,
@@ -234,17 +246,19 @@ FLT_PREOP_CALLBACK_STATUS PreSetInformationCallback(
 
     // Bắt hành vi XÓA FILE
     BOOLEAN isDelete = FALSE;
-    if (infoClass == FileDispositionInformation) {
-        PFILE_DISPOSITION_INFORMATION info = 
-            (PFILE_DISPOSITION_INFORMATION)Data->Iopb->Parameters.SetFileInformation.InfoBuffer;
-        if (info != NULL && info->DeleteFile) {
-            isDelete = TRUE;
-        }
-    } else if (infoClass == (FILE_INFORMATION_CLASS)64 /* FileDispositionInformationEx */) {
-        PFILE_DISPOSITION_INFORMATION info = 
-            (PFILE_DISPOSITION_INFORMATION)Data->Iopb->Parameters.SetFileInformation.InfoBuffer;
-        if (info != NULL && info->DeleteFile) {
-            isDelete = TRUE;
+    PVOID infoBuffer = Data->Iopb->Parameters.SetFileInformation.InfoBuffer;
+
+    if (infoBuffer != NULL) {
+        if (infoClass == FileDispositionInformation) {
+            PFILE_DISPOSITION_INFORMATION info = (PFILE_DISPOSITION_INFORMATION)infoBuffer;
+            if (info->DeleteFile) {
+                isDelete = TRUE;
+            }
+        } else if (infoClass == FileDispositionInformationEx) {
+            PMY_FILE_DISPOSITION_INFORMATION_EX infoEx = (PMY_FILE_DISPOSITION_INFORMATION_EX)infoBuffer;
+            if (BooleanFlagOn(infoEx->Flags, FILE_DISPOSITION_FLAG_DELETE)) {
+                isDelete = TRUE;
+            }
         }
     }
 
