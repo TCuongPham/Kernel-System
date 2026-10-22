@@ -1,0 +1,13 @@
+# Linux kernel module build outputs
+*.ko
+*.o
+*.mod
+*.mod.c
+*.mod.o
+.*.cmd
+modules.order
+Module.symvers
+.cache.mk
+
+# Compiled user-space test tool
+ctl
