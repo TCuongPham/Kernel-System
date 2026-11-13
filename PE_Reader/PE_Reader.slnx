@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="PE_Reader.vcxproj" Id="a2e87721-2912-40f9-bdda-537127257049" />
+</Solution>
