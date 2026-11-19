@@ -6,24 +6,24 @@ typedef int (WINAPI* pfnMessageBoxA)(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption,
 pfnMessageBoxA g_OriginalMessageBoxA = nullptr;
 
 #if defined(_M_X64) || defined(__x86_64__)
-// Trên x64: Dùng absolute 64-bit jump (14 bytes)
+// Trên x64: Dùng absolute 64-bit jump (12 bytes)
 // mov rax, <64-bit address> (48 B8 + 8 bytes)
 // jmp rax                   (FF E0)
 #pragma pack(push, 1)
 struct JumpPatch64 {
-    BYTE movRax[2];   // 0x48, 0xB8
+	BYTE movRax[2];   // 0x48, 0xB8 (mov rax, <64-bit address>)
     void* targetAddr; // 8 bytes address
-    BYTE jmpRax[2];   // 0xFF, 0xE0
+	BYTE jmpRax[2];   // 0xFF, 0xE0 (jmp rax)
 };
 #pragma pack(pop)
-const size_t PATCH_SIZE = sizeof(JumpPatch64); // 14 bytes
+const size_t PATCH_SIZE = sizeof(JumpPatch64); // 12 bytes
 
 #else
 // Trên x86: Dùng relative 32-bit jump (5 bytes)
 // jmp <32-bit offset>       (E9 + 4 bytes)
 #pragma pack(push, 1)
 struct JumpPatch32 {
-    BYTE jmpOpcode;   // 0xE9
+    BYTE jmpOpcode;   // 0xE9: JMP rel32
     DWORD relativeOffset;
 };
 #pragma pack(pop)
@@ -37,14 +37,14 @@ void* g_TargetFunction = nullptr;
 // Hàm can thiệp (Hooked Function)
 int WINAPI HookedMessageBoxA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType)
 {
-    std::cout << "[Inline Hook] Da chan duoc loi goi MessageBoxA!\n";
+    std::cout << "[Inline Hook] Chan MessageBoxA!\n";
     std::cout << "  - Text goc:    \"" << lpText << "\"\n";
     std::cout << "  - Caption goc: \"" << lpCaption << "\"\n";
 
-    // Để có thể gọi lại hàm gốc mà không bị lặp đệ quy, ta tạm thời unhook (restore bytes gốc)
+    // Để có thể gọi lại hàm gốc mà không bị lặp đệ quy, tạm thời unhook (restore bytes gốc)
     DWORD oldProtect = 0;
     VirtualProtect(g_TargetFunction, PATCH_SIZE, PAGE_EXECUTE_READWRITE, &oldProtect);
-    memcpy(g_TargetFunction, g_OriginalBytes, PATCH_SIZE);
+	memcpy(g_TargetFunction, g_OriginalBytes, PATCH_SIZE); // Khôi phục bytes gốc
     VirtualProtect(g_TargetFunction, PATCH_SIZE, oldProtect, &oldProtect);
 
     // Gọi hàm gốc
@@ -62,7 +62,7 @@ int WINAPI HookedMessageBoxA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uT
     patch.targetAddr = reinterpret_cast<void*>(HookedMessageBoxA);
     patch.jmpRax[0] = 0xFF;
     patch.jmpRax[1] = 0xE0;
-    memcpy(g_TargetFunction, &patch, sizeof(patch));
+	memcpy(g_TargetFunction, &patch, sizeof(patch)); // Ghi đè lại bytes để Hook
 #else
     JumpPatch32 patch;
     patch.jmpOpcode = 0xE9;
@@ -108,7 +108,7 @@ bool InstallInlineHook(void* targetFunc, void* hookFunc)
     // 4. Khôi phục lại quyền bộ nhớ
     VirtualProtect(targetFunc, PATCH_SIZE, oldProtect, &oldProtect);
 
-    // 5. Làm sạch CPU Instruction Cache để đảm bảo CPU nạp mã máy mới
+    // 5. Làm sạch CPU Instruction Cache để CPU nạp mã máy mới
     FlushInstructionCache(GetCurrentProcess(), targetFunc, PATCH_SIZE);
 
     std::cout << "[+] Da cai dat Inline Hook thanh cong (" << PATCH_SIZE << " bytes patched)!\n";
@@ -117,11 +117,9 @@ bool InstallInlineHook(void* targetFunc, void* hookFunc)
 
 int main()
 {
-    std::cout << "===INLINE HOOKING ===\n\n";
-
     // 1. Lần gọi thứ 1: Trước khi Hook
     std::cout << "[1] Goi MessageBoxA lan 1 (chua hook)...\n";
-    MessageBoxA(NULL, "Day la MessageBoxA ban dau.", "Thong bao binh thuong", MB_OK);
+    MessageBoxA(NULL, "MessageBoxA ban dau.", "Thong bao binh thuong", MB_OK);
 
     // 2. Lấy con trỏ tới hàm MessageBoxA trong user32.dll
     HMODULE hUser32 = LoadLibraryA("user32.dll");
@@ -140,10 +138,8 @@ int main()
 
     // 4. Lần gọi thứ 2: Sau khi Hook (lệnh gọi trực tiếp hoặc qua con trỏ đều bị hook)
     std::cout << "\n[3] Goi MessageBoxA lan 2 (da hook)...\n";
-    MessageBoxA(NULL, "Tin nhan thu hai sau khi da hook.", "Hop thoai 2", MB_OK);
+    MessageBoxA(NULL, "Tin nhan sau khi da hook.", "Hop thoai 2", MB_OK);
 
-    std::cout << "\n=== HOAN THANH DEMO INLINE HOOK ===\n";
-    std::cout << "Nhan Enter de thoat...";
     std::cin.get();
     return 0;
 }

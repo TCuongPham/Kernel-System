@@ -8,7 +8,7 @@ pfnMessageBoxA g_OriginalMessageBoxA = nullptr;
 // Hàm giả lập (Hooked Function) sẽ được gọi thay thế cho MessageBoxA gốc
 int WINAPI HookedMessageBoxA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType)
 {
-    std::cout << "[IAT Hook] Da chan duoc goi MessageBoxA!\n";
+    std::cout << "[IAT Hook] Da chan duoc MessageBoxA!\n";
     std::cout << "  - Noi dung goc: \"" << lpText << "\"\n";
     std::cout << "  - Tieu de goc:  \"" << lpCaption << "\"\n";
 
@@ -23,7 +23,7 @@ int WINAPI HookedMessageBoxA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uT
 // Hàm thực hiện duyệt PE Header và tráo con trỏ trong IAT
 bool InstallIATHook(const char* targetDllName, const char* targetFuncName, void* hookFunc, void** ppOriginalFunc)
 {
-    // 1. Lấy Base Address của module hiện tại (chính là ImageBase của file .exe trong bộ nhớ)
+    // 1. Lấy Base Address của module hiện tại (ImageBase của file .exe trong bộ nhớ)
     uintptr_t imageBase = reinterpret_cast<uintptr_t>(GetModuleHandleA(nullptr));
     if (!imageBase) return false;
 
@@ -54,7 +54,7 @@ bool InstallIATHook(const char* targetDllName, const char* targetFuncName, void*
     for (; importDescriptor->Name != 0; ++importDescriptor) {
         const char* currentDllName = reinterpret_cast<const char*>(imageBase + importDescriptor->Name);
         
-        // So sánh tên DLL (không phân biệt hoa thường)
+        // So sánh tên DLL 
         if (_stricmp(currentDllName, targetDllName) == 0) {
             // FirstThunk trỏ tới IAT (Import Address Table) - bảng chứa con trỏ hàm thực tế
             auto thunkIAT = reinterpret_cast<PIMAGE_THUNK_DATA>(imageBase + importDescriptor->FirstThunk);
@@ -87,13 +87,13 @@ bool InstallIATHook(const char* targetDllName, const char* targetFuncName, void*
                             return false;
                         }
 
-                        // Ghi đè con trỏ hàm sang hàm Hook của chúng ta
+                        // Ghi đè con trỏ hàm sang hàm Hook 
                         thunkIAT->u1.Function = reinterpret_cast<uintptr_t>(hookFunc);
 
                         // Khôi phục lại quyền ban đầu
                         VirtualProtect(&thunkIAT->u1.Function, sizeof(uintptr_t), oldProtect, &oldProtect);
 
-                        std::cout << "[+] Hook IAT thanh cong cho ham: " << targetFuncName << "\n";
+                        std::cout << "[+] Hook IAT cho ham: " << targetFuncName << "\n";
                         return true;
                     }
                 }
@@ -107,11 +107,9 @@ bool InstallIATHook(const char* targetDllName, const char* targetFuncName, void*
 
 int main()
 {
-    std::cout << "===IAT HOOKING ===\n\n";
-
     // 1. Lần gọi thứ 1: Trước khi Hook
     std::cout << "[1] Goi MessageBoxA truoc khi Hook...\n";
-    MessageBoxA(NULL, "Xin chao! Day la hop thoai ban dau chua bi hook.", "Original Dialog", MB_OK);
+    MessageBoxA(NULL, "Day la hop thoai ban dau chua bi hook.", "Original Dialog", MB_OK);
 
     // 2. Cài đặt IAT Hook
     std::cout << "\n[2] Dang cai dat IAT Hook...\n";
@@ -126,8 +124,6 @@ int main()
     std::cout << "\n[3] Goi MessageBoxA sau khi Hook...\n";
     MessageBoxA(NULL, "Day la tin nhan goi lan 2.", "Original Dialog 2", MB_OK);
 
-    std::cout << "\n=== HOAN THANH DEMO IAT HOOK ===\n";
-    std::cout << "Nhan Enter de thoat...";
     std::cin.get();
     return 0;
 }
